@@ -10,3 +10,6 @@ __pycache__/
 # fully reproduce the site data). The raw Transfermarkt/Kaggle dumps are large
 # and only needed locally to (re)generate those folders, so they're ignored.
 pipeline/data/raw/transfermarkt/*.csv
+
+# TS build info
+*.tsbuildinfo
