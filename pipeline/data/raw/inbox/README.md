@@ -15,11 +15,29 @@ them anything (e.g. `2021-22.csv`); the season year is read from the dates.
 That's enough for a fully playable season (real fixtures, exact real table, the
 "flip a result" intervention).
 
-## Optional: players & transfers
+## Optional: players & transfers (unlocks injure / cancel-transfer)
 
-To also unlock **injure a player** and **cancel a transfer** for a season, add a
-`players.csv` and/or `transfers.csv` (schema in `../README.md`). Without them,
-those two intervention types simply show no options for that season; flips still
+Two ways:
+
+1. **Transfermarkt Kaggle dump (automatic).** Put the raw
+   [`davidcariboo/player-scores`](https://www.kaggle.com/datasets/davidcariboo/player-scores)
+   files — `appearances.csv`, `players.csv`, `clubs.csv`, and optionally
+   `player_valuations.csv` + `transfers.csv` — into **`../transfermarkt/`**
+   (not here). The converter streams them row-by-row, keeps only the Premier
+   League slice for the seasons you've added, and writes a small
+   `players.csv` / `transfers.csv` into each season folder. **Only that small
+   output is committed — the giant raw files never enter git.**
+
+   ⚠️ These files are huge (`appearances.csv` is 300 MB+), so they can't go
+   through GitHub's web upload (25 MB) or even a normal git push (100 MB/file).
+   Get them into `../transfermarkt/` via **Git LFS**, a direct file upload into
+   the workspace, or by filtering them down first — then ping me and I'll run
+   the extraction.
+
+2. **Hand-written CSVs.** Add a `players.csv` / `transfers.csv` per season
+   yourself (schema in `../README.md`).
+
+Without either, injure/cancel just show no options for that season; flips still
 work.
 
 ## What happens next

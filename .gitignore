@@ -10,3 +10,11 @@ __pycache__/
 # Only the optional bulk Transfermarkt/Kaggle dumps are ignored (too large).
 pipeline/data/raw/transfermarkt/*.csv
 !pipeline/data/raw/transfermarkt/.gitkeep
+
+# Defensive: never let the giant Kaggle dumps into git even if dropped in the
+# inbox. Put them in pipeline/data/raw/transfermarkt/ instead.
+pipeline/data/raw/inbox/appearances.csv
+pipeline/data/raw/inbox/player_valuations.csv
+pipeline/data/raw/inbox/games.csv
+pipeline/data/raw/inbox/game_events.csv
+pipeline/data/raw/inbox/club_games.csv

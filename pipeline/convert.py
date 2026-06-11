@@ -24,11 +24,13 @@ from pathlib import Path
 from typing import List, Optional
 
 import clubs
-from ingest_csv import _rows  # reuse the tolerant reader
+import transfermarkt
+from ingest_csv import _rows, season_folders  # reuse the tolerant reader
 
 PIPELINE = Path(__file__).resolve().parent
 INBOX = PIPELINE / "data" / "raw" / "inbox"
 SEASONS_DIR = PIPELINE / "data" / "raw" / "seasons"
+TM_DIR = PIPELINE / "data" / "raw" / "transfermarkt"
 
 FD_REQUIRED = {"HomeTeam", "AwayTeam", "FTHG", "FTAG"}
 
@@ -163,8 +165,28 @@ def main() -> None:
             print(f"  · {p.relative_to(INBOX)}")
         print("  → share a couple of header rows and I'll add a parser.")
 
-    if converted:
-        print(f"\nConverted seasons: {', '.join(sorted(set(converted)))}")
+    # Enrich with Transfermarkt player/transfer data when the dump is present.
+    # Target every season folder we have fixtures for (PL_<year>).
+    tm_done: List[int] = []
+    if (TM_DIR / "appearances.csv").exists():
+        years = set()
+        for folder in season_folders(SEASONS_DIR):
+            name = folder.name
+            if name.startswith("PL_") and name[3:].isdigit():
+                years.add(int(name[3:]))
+        if years:
+            print(f"\nTransfermarkt dump found — extracting PL slice for {sorted(years)}…")
+            tm_done = transfermarkt.enrich(TM_DIR, SEASONS_DIR, years)
+            print(f"  ✓ player/transfer data written for seasons: {sorted(tm_done)}")
+    else:
+        print(
+            "\n(No transfermarkt/appearances.csv — skipping player data. "
+            "Drop the Kaggle files there to enable injure / cancel-transfer.)"
+        )
+
+    if converted or tm_done:
+        if converted:
+            print(f"\nConverted seasons: {', '.join(sorted(set(converted)))}")
         print("Running build…\n")
         import build
 
