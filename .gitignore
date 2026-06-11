@@ -6,6 +6,7 @@ dist/
 coverage/
 __pycache__/
 
-# Everything you drop under pipeline/data/raw/ is tracked in git. Put your
-# *filtered* (small) Kaggle files in pipeline/data/raw/transfermarkt/ — GitHub's
-# own size limits stop an accidental multi-hundred-MB file getting in.
+# Per-season CSV folders under pipeline/data/raw/seasons/ ARE tracked (they
+# fully reproduce the site data). The raw Transfermarkt/Kaggle dumps are large
+# and only needed locally to (re)generate those folders, so they're ignored.
+pipeline/data/raw/transfermarkt/*.csv

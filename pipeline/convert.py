@@ -142,13 +142,10 @@ def convert_football_data(path: Path) -> Optional[str]:
 def main() -> None:
     INBOX.mkdir(parents=True, exist_ok=True)
     files = sorted(p for p in INBOX.rglob("*.csv"))
-    if not files:
-        print(f"No CSVs found in {INBOX}.\nDrop football-data.co.uk PL files there and re-run.")
-        return
-
-    print(f"Scanning {len(files)} file(s) in inbox…")
     converted: List[str] = []
     unknown: List[Path] = []
+    if files:
+        print(f"Scanning {len(files)} file(s) in inbox…")
     for path in files:
         with path.open(newline="", encoding="utf-8-sig") as f:
             headers = set(next(csv.reader(f), []))
@@ -165,29 +162,38 @@ def main() -> None:
             print(f"  · {p.relative_to(INBOX)}")
         print("  → share a couple of header rows and I'll add a parser.")
 
-    # Enrich with Transfermarkt player/transfer data when the dump is present.
-    # Target every season folder we have fixtures for (PL_<year>).
+    # Build PL seasons straight from Transfermarkt games.csv (real results) +
+    # transfers.csv. Gives flip + cancel-transfer for every PL season present.
+    games_done: List[int] = []
+    if (TM_DIR / "games.csv").exists():
+        import ingest_games
+
+        print("\nTransfermarkt games.csv found — building PL seasons (results + transfers)…")
+        games_done = ingest_games.build(TM_DIR, SEASONS_DIR)
+        print(f"  ✓ seasons built: {games_done}")
+
+    # If the (huge) appearances.csv is present, enrich with player minutes so the
+    # injure intervention works too. Optional — skipped when absent.
     tm_done: List[int] = []
     if (TM_DIR / "appearances.csv").exists():
-        years = set()
-        for folder in season_folders(SEASONS_DIR):
-            name = folder.name
-            if name.startswith("PL_") and name[3:].isdigit():
-                years.add(int(name[3:]))
-        if years:
-            print(f"\nTransfermarkt dump found — extracting PL slice for {sorted(years)}…")
-            tm_done = transfermarkt.enrich(TM_DIR, SEASONS_DIR, years)
-            print(f"  ✓ player/transfer data written for seasons: {sorted(tm_done)}")
-    else:
+        years = {
+            int(f.name[3:])
+            for f in season_folders(SEASONS_DIR)
+            if f.name.startswith("PL_") and f.name[3:].isdigit()
+        }
+        print(f"\nappearances.csv found — extracting player minutes for {sorted(years)}…")
+        tm_done = transfermarkt.enrich(TM_DIR, SEASONS_DIR, years)
+        print(f"  ✓ player data written for: {sorted(tm_done)}")
+    elif (TM_DIR / "games.csv").exists():
         print(
-            "\n(No transfermarkt/appearances.csv — skipping player data. "
-            "Drop the Kaggle files there to enable injure / cancel-transfer.)"
+            "\n(No appearances.csv — seasons get flip + cancel-transfer. "
+            "Add the filtered appearances.csv to also enable injuries.)"
         )
 
-    if converted or tm_done:
+    if converted or games_done or tm_done:
         if converted:
-            print(f"\nConverted seasons: {', '.join(sorted(set(converted)))}")
-        print("Running build…\n")
+            print(f"\nConverted (football-data): {', '.join(sorted(set(converted)))}")
+        print("\nRunning build…\n")
         import build
 
         build.main()

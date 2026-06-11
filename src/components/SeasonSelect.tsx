@@ -5,6 +5,11 @@ const TAGLINES: Record<string, string> = {
   PL_1995: 'Newcastle led by 12 points. What if they’d held on?',
   PL_2003: 'Arsenal went unbeaten. What breaks the Invincibles?',
   PL_2011: 'Decided in the 94th minute. Aguerooo — or not?',
+  PL_2015: 'Leicester at 5000–1. Undo the miracle?',
+  PL_2018: 'City hit 100 points. How fragile was it really?',
+  PL_2019: 'Liverpool’s 99. Project Restart, rewritten.',
+  PL_2021: 'City pipped Liverpool by a point. Tip it back?',
+  PL_2023: 'City’s treble year. Pull one thread.',
 };
 
 export default function SeasonSelect({
@@ -21,7 +26,7 @@ export default function SeasonSelect({
       </p>
       <h2 className="mb-5 font-display text-4xl tracking-wide">Pick a season</h2>
       <div className="grid gap-3">
-        {manifest.seasons.map((s) => (
+        {[...manifest.seasons].reverse().map((s) => (
           <button
             key={s.key}
             onClick={() => onPick(s)}

@@ -34,6 +34,146 @@
       "sizeKb": 39.0,
       "dataSource": "curated-model",
       "impactFallback": false
+    },
+    {
+      "key": "PL_2012",
+      "league": "PL",
+      "year": 2012,
+      "name": "Premier League 2012/13",
+      "file": "PL_2012.json",
+      "sizeKb": 37.0,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2013",
+      "league": "PL",
+      "year": 2013,
+      "name": "Premier League 2013/14",
+      "file": "PL_2013.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2014",
+      "league": "PL",
+      "year": 2014,
+      "name": "Premier League 2014/15",
+      "file": "PL_2014.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2015",
+      "league": "PL",
+      "year": 2015,
+      "name": "Premier League 2015/16",
+      "file": "PL_2015.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2016",
+      "league": "PL",
+      "year": 2016,
+      "name": "Premier League 2016/17",
+      "file": "PL_2016.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2017",
+      "league": "PL",
+      "year": 2017,
+      "name": "Premier League 2017/18",
+      "file": "PL_2017.json",
+      "sizeKb": 37.0,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2018",
+      "league": "PL",
+      "year": 2018,
+      "name": "Premier League 2018/19",
+      "file": "PL_2018.json",
+      "sizeKb": 37.0,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2019",
+      "league": "PL",
+      "year": 2019,
+      "name": "Premier League 2019/20",
+      "file": "PL_2019.json",
+      "sizeKb": 37.0,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2020",
+      "league": "PL",
+      "year": 2020,
+      "name": "Premier League 2020/21",
+      "file": "PL_2020.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2021",
+      "league": "PL",
+      "year": 2021,
+      "name": "Premier League 2021/22",
+      "file": "PL_2021.json",
+      "sizeKb": 37.0,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2022",
+      "league": "PL",
+      "year": 2022,
+      "name": "Premier League 2022/23",
+      "file": "PL_2022.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2023",
+      "league": "PL",
+      "year": 2023,
+      "name": "Premier League 2023/24",
+      "file": "PL_2023.json",
+      "sizeKb": 36.9,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2024",
+      "league": "PL",
+      "year": 2024,
+      "name": "Premier League 2024/25",
+      "file": "PL_2024.json",
+      "sizeKb": 37.0,
+      "dataSource": "csv",
+      "impactFallback": false
+    },
+    {
+      "key": "PL_2025",
+      "league": "PL",
+      "year": 2025,
+      "name": "Premier League 2025/26",
+      "file": "PL_2025.json",
+      "sizeKb": 35.4,
+      "dataSource": "csv",
+      "impactFallback": false
     }
   ]
 }

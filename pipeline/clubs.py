@@ -75,18 +75,56 @@ CLUBS: List[Club] = [
 
 BY_ID: Dict[str, Club] = {c.id: c for c in CLUBS}
 
-# alias (and id, and canonical name) -> id
+# Lowercased alias (and id, and canonical name) -> id.
 ALIAS_TO_ID: Dict[str, str] = {}
 for _c in CLUBS:
-    ALIAS_TO_ID[_c.id] = _c.id
-    ALIAS_TO_ID[_c.name] = _c.id
+    ALIAS_TO_ID[_c.id.lower()] = _c.id
+    ALIAS_TO_ID[_c.name.lower()] = _c.id
+    ALIAS_TO_ID[_c.name.replace("&", "and").lower()] = _c.id
     for _a in _c.aliases:
-        ALIAS_TO_ID[_a] = _c.id
+        ALIAS_TO_ID[_a.lower()] = _c.id
+
+# Suffix/prefix noise in Transfermarkt's long legal names, e.g.
+# "Manchester United Football Club", "Association Football Club Bournemouth".
+_SUFFIXES = (
+    " association football club",
+    " football club",
+    " f.c.",
+    " fc",
+    " afc",
+)
+_PREFIXES = ("association football club ", "afc ")
+
+
+def _normalise(name: str) -> str:
+    s = (name or "").strip()
+    low = s.lower()
+    changed = True
+    while changed:
+        changed = False
+        for suf in _SUFFIXES:
+            if low.endswith(suf):
+                s = s[: len(s) - len(suf)].strip()
+                low = s.lower()
+                changed = True
+        for pre in _PREFIXES:
+            if low.startswith(pre):
+                s = s[len(pre):].strip()
+                low = s.lower()
+                changed = True
+    return s
 
 
 def resolve(name: str) -> str:
-    """Map a source club name to our id, or raise with a clear message."""
-    key = (name or "").strip()
-    if key in ALIAS_TO_ID:
-        return ALIAS_TO_ID[key]
+    """Map a source club name to our id, or raise with a clear message.
+
+    Tolerates Transfermarkt's long legal names and 'and' vs '&'.
+    """
+    raw = (name or "").strip().lower()
+    if raw in ALIAS_TO_ID:
+        return ALIAS_TO_ID[raw]
+    norm = _normalise(name).lower()
+    for cand in (norm, norm.replace(" and ", " & "), norm.replace(" & ", " and ")):
+        if cand in ALIAS_TO_ID:
+            return ALIAS_TO_ID[cand]
     raise KeyError(name)

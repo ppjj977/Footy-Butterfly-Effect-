@@ -1,5 +1,75 @@
 # Butterfly pipeline validation report
 
+## Premier League 2012/13  (`PL_2012.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2013/14  (`PL_2013.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2014/15  (`PL_2014.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2015/16  (`PL_2015.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2016/17  (`PL_2016.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2017/18  (`PL_2017.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2018/19  (`PL_2018.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2019/20  (`PL_2019.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2020/21  (`PL_2020.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2021/22  (`PL_2021.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2022/23  (`PL_2022.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2023/24  (`PL_2023.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2024/25  (`PL_2024.json`, 37 KB)
+- source: csv  fixtures: 380  transfers: 25  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
+## Premier League 2025/26  (`PL_2025.json`, 35 KB)
+- source: csv  fixtures: 380  transfers: 14  players: 0
+- impact source: minutes+value+G/A
+- ✅ baseline table matches real standings
+
 ## Premier League 1995/96  (`PL_1995.json`, 39 KB)
 - source: curated-model  fixtures: 380  transfers: 9  players: 30
 - impact source: minutes+G/A fallback
