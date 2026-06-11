@@ -1,9 +1,26 @@
-# 🦋 Butterfly
+# ⚽ Footy Lab
 
-A browser-based **counterfactual football engine**. Pick a real Premier League
-season, change exactly **one thing**, and watch the engine re-simulate history
-into an alternate timeline — a new final table, changed outcomes, and
-newspaper-style headlines.
+Two browser games sharing one deterministic football engine and the same real
+Premier League dataset (17 seasons). Switch between them from the top bar.
+
+## ⚽ Title Run — management roguelike
+
+Take a club through a full 38-week season. Each week you **scout the opponent**,
+pick your **tactics** (a 5-way "counter pentagon" of styles), set **intensity**,
+and decide whether to **rotate** — all while managing **stamina, morale and
+injuries**. Per-match variance is deliberately low, so across a season your
+decisions compound and skill beats luck (the engine is unit-tested to prove a
+tactical strategy finishes well above random). Strong clubs chase the title;
+mid-table sides can overachieve into Europe with sharp management.
+
+Engine: `src/titlerun/` (`tactics.ts` deterministic match core, `campaign.ts`
+season/AI/resources). UI: `src/titlerun/TitleRun.tsx`.
+
+## 🦋 Butterfly — counterfactual engine
+
+Pick a real Premier League season, change exactly **one thing**, and watch the
+engine re-simulate history into an alternate timeline — a new final table,
+changed outcomes, and newspaper-style headlines.
 
 > _"You cancelled the Aguero transfer. United win the league."_
 
