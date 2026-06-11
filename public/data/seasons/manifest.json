@@ -1,0 +1,39 @@
+{
+  "leagues": {
+    "PL": {
+      "name": "Premier League"
+    }
+  },
+  "seasons": [
+    {
+      "key": "PL_1995",
+      "league": "PL",
+      "year": 1995,
+      "name": "Premier League 1995/96",
+      "file": "PL_1995.json",
+      "sizeKb": 38.9,
+      "dataSource": "curated-model",
+      "impactFallback": true
+    },
+    {
+      "key": "PL_2003",
+      "league": "PL",
+      "year": 2003,
+      "name": "Premier League 2003/04",
+      "file": "PL_2003.json",
+      "sizeKb": 38.3,
+      "dataSource": "curated-model",
+      "impactFallback": true
+    },
+    {
+      "key": "PL_2011",
+      "league": "PL",
+      "year": 2011,
+      "name": "Premier League 2011/12",
+      "file": "PL_2011.json",
+      "sizeKb": 39.0,
+      "dataSource": "curated-model",
+      "impactFallback": false
+    }
+  ]
+}

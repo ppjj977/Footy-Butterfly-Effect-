@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.vite/
+coverage/
+__pycache__/
+pipeline/data/raw/*.csv
+!pipeline/data/raw/.gitkeep
