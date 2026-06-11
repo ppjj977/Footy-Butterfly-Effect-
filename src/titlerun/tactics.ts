@@ -51,14 +51,22 @@ export function styleEdge(a: Style, b: Style): number {
 }
 
 // ── Tuning constants ───────────────────────────────────────────────────────
-export const HOME_ADV = 60; // Elo points
-const STYLE_SWING = 80; // Elo points a won tactical battle is worth
-const INTENSITY_MOD: Record<Intensity, number> = { low: -18, normal: 0, high: 26 };
+export const HOME_ADV = 55; // Elo points
+const STYLE_SWING = 115; // Elo a won tactical battle is worth
+const INTENSITY_MOD: Record<Intensity, number> = { low: -16, normal: 0, high: 24 };
 
-// Goal model: low-variance. Expected goals come from the strength gap; the
-// realised score is the expected score plus a small seeded nudge.
+// Quality (squad strength) gaps are compressed through a soft cap so a top club
+// can't steamroll on quality alone — they're clearly favoured, but beatable, and
+// your tactics/management (applied AFTER the cap, at full strength) always swing
+// the match. This is what makes every game a contest and bad choices costly even
+// for the best sides, while a stronger opponent is still genuinely harder.
+const QUALITY_CAP = 300;
 const BASE_XG = 1.35;
-const ELO_PER_GOAL = 180;
+const ELO_PER_GOAL = 220;
+
+function compress(diff: number): number {
+  return QUALITY_CAP * Math.tanh(diff / QUALITY_CAP);
+}
 
 export interface SideContext {
   elo: number;
@@ -78,25 +86,29 @@ export interface MatchResult {
   tacticalEdge: number;
 }
 
-export function effectiveStrength(side: SideContext, oppStyle: Style): number {
+/** Quality only (squad + home) — gets compressed against the opponent. */
+function quality(side: SideContext): number {
+  return side.elo + (side.isHome ? HOME_ADV : 0);
+}
+
+/** Tactics + management — applied at full strength, never compressed. */
+function tactical(side: SideContext, oppStyle: Style): number {
   return (
-    side.elo +
-    (side.isHome ? HOME_ADV : 0) +
     styleEdge(side.plan.style, oppStyle) * STYLE_SWING +
     INTENSITY_MOD[side.plan.intensity] +
     (side.formMod ?? 0)
   );
 }
 
-function expectedGoals(strengthFor: number, strengthAgainst: number): number {
-  const diff = strengthFor - strengthAgainst;
-  return Math.max(0.15, BASE_XG * Math.pow(2, diff / ELO_PER_GOAL));
+/** Effective strength for display: compressed-quality midpoint + own tactics. */
+export function effectiveStrength(side: SideContext, oppStyle: Style): number {
+  return Math.round(compress(quality(side)) + tactical(side, oppStyle));
 }
 
 // A small, bounded, seeded jitter. Triangular-ish: mostly near 0. Keeps the
 // scoreline lively without letting one match be a coin flip.
 function jitter(rng: () => number): number {
-  return (rng() + rng() - 1) * 0.9; // in (-0.9, 0.9), peaked at 0
+  return (rng() + rng() - 1) * 0.95;
 }
 
 export function resolveMatch(
@@ -104,11 +116,16 @@ export function resolveMatch(
   away: SideContext,
   rng: () => number,
 ): MatchResult {
-  const homeStrength = effectiveStrength({ ...home, isHome: true }, away.plan.style);
-  const awayStrength = effectiveStrength({ ...away, isHome: false }, home.plan.style);
+  const h = { ...home, isHome: true };
+  const a = { ...away, isHome: false };
 
-  const hXg = expectedGoals(homeStrength, awayStrength);
-  const aXg = expectedGoals(awayStrength, homeStrength);
+  // Compress the QUALITY gap, then add full-strength tactics on top.
+  const qualityDiff = compress(quality(h) - quality(a));
+  const tacticalDiff = tactical(h, a.plan.style) - tactical(a, h.plan.style);
+  const effDiff = qualityDiff + tacticalDiff;
+
+  const hXg = Math.max(0.15, BASE_XG * Math.pow(2, effDiff / 2 / ELO_PER_GOAL));
+  const aXg = Math.max(0.15, BASE_XG * Math.pow(2, -effDiff / 2 / ELO_PER_GOAL));
 
   const hg = Math.max(0, Math.round(hXg + jitter(rng)));
   const ag = Math.max(0, Math.round(aXg + jitter(rng)));
@@ -116,8 +133,8 @@ export function resolveMatch(
   return {
     hg,
     ag,
-    homeStrength,
-    awayStrength,
+    homeStrength: effectiveStrength(h, a.plan.style),
+    awayStrength: effectiveStrength(a, h.plan.style),
     tacticalEdge: styleEdge(home.plan.style, away.plan.style),
   };
 }

@@ -231,7 +231,7 @@ function staminaPenalty(stamina: number): number {
 }
 
 function moraleMod(morale: number): number {
-  return Math.round((morale - 55) * 0.55); // ~ -30..+25
+  return Math.round((morale - 55) * 0.3); // ~ -16..+14, a nudge not a snowball
 }
 
 function clamp(x: number, lo: number, hi: number) {

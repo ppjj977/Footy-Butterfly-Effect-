@@ -106,6 +106,21 @@ describe('skill beats luck (the whole point)', () => {
     // Skill should be worth multiple league places on average.
     expect(smartAvg).toBeLessThan(randomAvg - 1.5);
   });
+
+  it('quality alone does not carry a top club — coasting must miss the title', () => {
+    // A strong club playing a fixed, un-scouted plan should not auto-win:
+    // smart management is meaningfully better than coasting.
+    const seeds = Array.from({ length: 12 }, (_, i) => i * 777 + 5);
+    const coast = (): Decision => ({ style: 'possession', intensity: 'normal', rotate: false });
+    let smart = 0;
+    let coasting = 0;
+    for (const seed of seeds) {
+      smart += gradeSeason(runSeason('MCI', seed, SMART)).position;
+      coasting += gradeSeason(runSeason('MCI', seed, coast)).position;
+    }
+    expect(smart / seeds.length).toBeLessThan(coasting / seeds.length - 1.5);
+    expect(coasting / seeds.length).toBeGreaterThan(2); // coasting ≈ off the title
+  });
 });
 
 describe('resource pressure', () => {
