@@ -21,8 +21,8 @@ difference). Counterfactual realism comes from the per-team Elo ratings.
 """
 from __future__ import annotations
 
+import csv
 import json
-import os
 import random
 from dataclasses import asdict
 from pathlib import Path
@@ -30,9 +30,12 @@ from typing import Dict, List
 
 from seasons_data import SEASONS, TeamSeed
 from impact_calc import compute_player_impacts, compute_transfer_impacts
+from ingest_csv import season_folders, load_season_folder
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "public" / "data" / "seasons"
+RAW_DIR = Path(__file__).resolve().parent / "data" / "raw"
+SEASONS_CSV_DIR = RAW_DIR / "seasons"
 
 # A representative scoreline for each outcome + goal margin, used when the
 # reconciler forces a result. Goal counts are tuned in the goals phase.
@@ -326,6 +329,88 @@ def build_season(key: str, season) -> dict:
     }
 
 
+def build_season_real(season, fixtures: List[dict]) -> dict:
+    """Build a season JSON directly from real fixtures (CSV path).
+
+    No schedule generation or reconciliation: the supplied results ARE the
+    baseline. Team Elo comes from teams.csv when given, else from real points.
+    """
+    # Real points per team, used to derive Elo when not supplied.
+    pts = {t.id: 0 for t in season.teams}
+    for fx in fixtures:
+        ph, pa = points_of(fx["fhg"], fx["fag"])
+        pts[fx["home"]] += ph
+        pts[fx["away"]] += pa
+
+    elo = {
+        t.id: (t.elo if t.elo else elo_from_points(pts[t.id])) for t in season.teams
+    }
+
+    players = compute_player_impacts(season)
+    transfers = compute_transfer_impacts(season, players)
+
+    return {
+        "meta": {
+            "league": season.league,
+            "year": season.year,
+            "name": season.name,
+            "teams": len(season.teams),
+            "dataSource": "csv",
+            "impactFallback": season.impact_fallback,
+        },
+        "teams": [
+            {"id": t.id, "name": t.name, "short": t.short, "elo": elo[t.id]}
+            for t in season.teams
+        ],
+        "fixtures": fixtures,
+        "transfers": [asdict(tr) for tr in transfers],
+        "players": [asdict(p) for p in players],
+    }
+
+
+def export_csv(key: str) -> None:
+    """Write a curated season out as editable CSVs under seasons/<key>/."""
+    if key not in SEASONS:
+        raise SystemExit(f"Unknown season key {key!r}. Known: {', '.join(SEASONS)}")
+    data = build_season(key, SEASONS[key])
+    season = SEASONS[key]
+    folder = SEASONS_CSV_DIR / key
+    folder.mkdir(parents=True, exist_ok=True)
+
+    def write(name, header, rows):
+        with (folder / name).open("w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(header)
+            w.writerows(rows)
+
+    write(
+        "meta.csv",
+        ["league", "year", "name", "impact_fallback"],
+        [[season.league, season.year, season.name, str(season.impact_fallback).lower()]],
+    )
+    write(
+        "teams.csv",
+        ["id", "name", "short", "elo"],
+        [[t["id"], t["name"], t["short"], t["elo"]] for t in data["teams"]],
+    )
+    write(
+        "fixtures.csv",
+        ["id", "matchday", "date", "home", "away", "fhg", "fag"],
+        [[f["id"], f["matchday"], f["date"], f["home"], f["away"], f["fhg"], f["fag"]] for f in data["fixtures"]],
+    )
+    write(
+        "players.csv",
+        ["id", "name", "club", "position", "minutes", "goals", "assists", "value_share"],
+        [[p["id"], p["name"], p["club"], p["position"], p["minutes"], p["goals"], p["assists"], p.get("valueShare") or ""] for p in data["players"]],
+    )
+    write(
+        "transfers.csv",
+        ["id", "player_id", "player_name", "from_club", "to_club", "fee", "date"],
+        [[t["id"], t["playerId"], t["playerName"], t["fromClub"] or "", t["toClub"], t["fee"], t["date"]] for t in data["transfers"]],
+    )
+    print(f"Exported {key} -> {folder} ({len(data['fixtures'])} fixtures). Edit and re-run build.py.")
+
+
 def validate(key: str, data: dict, season) -> List[str]:
     """Return a list of validation warnings/errors for the report."""
     issues = []
@@ -349,61 +434,99 @@ def validate(key: str, data: dict, season) -> List[str]:
     return issues
 
 
+def validate_real(key: str, data: dict) -> List[str]:
+    """Looser validation for CSV seasons: structural checks only."""
+    issues = []
+    n = data["meta"]["teams"]
+    full = n * (n - 1)
+    nf = len(data["fixtures"])
+    if nf != full:
+        issues.append(
+            f"{key}: {nf} fixtures (a full round-robin would be {full}) — "
+            f"partial season, table built from supplied games"
+        )
+    ids = {t["id"] for t in data["teams"]}
+    dup = len(ids) != len(data["teams"])
+    if dup:
+        issues.append(f"{key}: duplicate team ids in teams.csv")
+    return issues
+
+
+def _emit(manifest, report_lines, key, name, season, data, issues, fatal: bool):
+    out_path = OUT_DIR / f"{key}.json"
+    out_path.write_text(json.dumps(data, separators=(",", ":")))
+    size_kb = out_path.stat().st_size / 1024
+
+    top5 = sorted(data["players"], key=lambda p: -p["impact"])[:5]
+    report_lines.append(f"## {name}  (`{key}.json`, {size_kb:.0f} KB)")
+    report_lines.append(
+        f"- source: {data['meta']['dataSource']}  fixtures: {len(data['fixtures'])}  "
+        f"transfers: {len(data['transfers'])}  players: {len(data['players'])}"
+    )
+    report_lines.append(
+        f"- impact source: "
+        f"{'minutes+G/A fallback' if data['meta']['impactFallback'] else 'minutes+value+G/A'}"
+    )
+    if top5:
+        report_lines.append("- top-5 impact deltas (Elo points):")
+        for p in top5:
+            report_lines.append(f"    - {p['name']:<22} {p['club']:<5} {p['impact']:5.1f}")
+    if issues:
+        report_lines.append(f"- {'⚠️' if fatal else 'ℹ️'} notes:")
+        for i in issues:
+            report_lines.append(f"    - {i}")
+    else:
+        report_lines.append("- ✅ baseline table matches real standings")
+    report_lines.append("")
+
+    manifest["seasons"].append(
+        {
+            "key": key,
+            "league": data["meta"]["league"],
+            "year": data["meta"]["year"],
+            "name": name,
+            "file": f"{key}.json",
+            "sizeKb": round(size_kb, 1),
+            "dataSource": data["meta"]["dataSource"],
+            "impactFallback": data["meta"]["impactFallback"],
+        }
+    )
+    manifest["leagues"].setdefault(data["meta"]["league"], {"name": "Premier League"})
+
+
 def main() -> None:
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "--export-csv":
+        if len(sys.argv) < 3:
+            raise SystemExit("usage: build.py --export-csv <SEASON_KEY>")
+        export_csv(sys.argv[2])
+        return
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     manifest = {"leagues": {}, "seasons": []}
     report_lines = ["# Butterfly pipeline validation report", ""]
     all_ok = True
 
-    for key, season in SEASONS.items():
-        data = build_season(key, season)
-        out_path = OUT_DIR / f"{key}.json"
-        out_path.write_text(json.dumps(data, separators=(",", ":")))
-        size_kb = out_path.stat().st_size / 1024
+    # 1) User-supplied CSV seasons (preferred; override curated of same key).
+    csv_keys = set()
+    for folder in season_folders(SEASONS_CSV_DIR):
+        season, fixtures = load_season_folder(folder)
+        key = f"{season.league}_{season.year}"
+        data = build_season_real(season, fixtures)
+        issues = validate_real(key, data)  # informational, not fatal
+        _emit(manifest, report_lines, key, season.name, season, data, issues, fatal=False)
+        csv_keys.add(key)
 
+    # 2) Curated embedded seasons (fallback for any not supplied via CSV).
+    for key, season in SEASONS.items():
+        if key in csv_keys:
+            continue
+        data = build_season(key, season)
         issues = validate(key, data, season)
         if issues:
             all_ok = False
-
-        # Impact sanity table: top 5 players by impact.
-        top5 = sorted(data["players"], key=lambda p: -p["impact"])[:5]
-        report_lines.append(f"## {season.name}  (`{key}.json`, {size_kb:.0f} KB)")
-        report_lines.append(
-            f"- fixtures: {len(data['fixtures'])}  "
-            f"transfers: {len(data['transfers'])}  players: {len(data['players'])}"
-        )
-        report_lines.append(
-            f"- impact source: "
-            f"{'minutes+G/A fallback' if season.impact_fallback else 'minutes+value+G/A'}"
-        )
-        report_lines.append("- top-5 impact deltas (Elo points):")
-        for p in top5:
-            report_lines.append(
-                f"    - {p['name']:<22} {p['club']:<5} {p['impact']:5.1f}"
-            )
-        if issues:
-            report_lines.append("- ⚠️ ISSUES:")
-            for i in issues:
-                report_lines.append(f"    - {i}")
-        else:
-            report_lines.append("- ✅ baseline table matches real points exactly")
-        report_lines.append("")
-
-        manifest["seasons"].append(
-            {
-                "key": key,
-                "league": season.league,
-                "year": season.year,
-                "name": season.name,
-                "file": f"{key}.json",
-                "sizeKb": round(size_kb, 1),
-                "dataSource": data["meta"]["dataSource"],
-                "impactFallback": season.impact_fallback,
-            }
-        )
-        manifest["leagues"].setdefault(
-            season.league, {"name": "Premier League"}
-        )
+        _emit(manifest, report_lines, key, season.name, season, data, issues, fatal=True)
 
     manifest["seasons"].sort(key=lambda s: (s["league"], s["year"]))
     (OUT_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2))
@@ -411,6 +534,8 @@ def main() -> None:
 
     print("\n".join(report_lines))
     print(f"\nWrote {len(manifest['seasons'])} seasons to {OUT_DIR}")
+    if csv_keys:
+        print(f"CSV-sourced seasons: {', '.join(sorted(csv_keys))}")
     print("manifest.json + validation_report.md written")
     if not all_ok:
         raise SystemExit("Validation found residual mismatches (see report).")

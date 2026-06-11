@@ -5,5 +5,8 @@ dist/
 .vite/
 coverage/
 __pycache__/
-pipeline/data/raw/*.csv
-!pipeline/data/raw/.gitkeep
+
+# Your per-season CSV data under pipeline/data/raw/seasons/ IS tracked in git.
+# Only the optional bulk Transfermarkt/Kaggle dumps are ignored (too large).
+pipeline/data/raw/transfermarkt/*.csv
+!pipeline/data/raw/transfermarkt/.gitkeep

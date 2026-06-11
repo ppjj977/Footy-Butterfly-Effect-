@@ -1,0 +1,6 @@
+id,name,club,position,minutes,goals,assists,value_share
+p_keane,Roy Keane,MUN,MF,3100,5,5,0.10
+p_yorke,Dwight Yorke,MUN,FW,2600,20,9,0.13
+p_bergkamp,Dennis Bergkamp,ARS,FW,2400,6,8,0.14
+p_kewell,Harry Kewell,LEE,MF,2900,8,6,0.11
+p_owen,Michael Owen,LIV,FW,2300,12,3,0.15

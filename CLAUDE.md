@@ -111,9 +111,23 @@ independent fan project with no affiliation, stats from public sources.
 
 ## Adding a season
 
-Append a `Season` to `SEASONS` in `pipeline/seasons_data.py` (real final
-standings + curated transfers/players), run the pipeline, commit the new JSON.
-The format is league-agnostic — La Liga / Serie A are config additions.
+Two ways, both league-agnostic:
+
+1. **CSV drop-in (preferred for real data):** copy
+   `pipeline/data/raw/seasons/_template` to `…/seasons/<LEAGUE>_<YEAR>`, fill in
+   `meta/teams/fixtures/players/transfers.csv` (schema in
+   `pipeline/data/raw/README.md`), then `python3 pipeline/build.py`. Real
+   fixtures are used directly (exact real table, no reconciliation) and tagged
+   `dataSource: "csv"`. A CSV folder overrides the curated season of the same
+   key. `python3 pipeline/build.py --export-csv PL_1995` dumps a real,
+   fully-populated example to edit.
+2. **Curated embedded:** append a `Season` to `SEASONS` in
+   `pipeline/seasons_data.py` (real final standings + curated transfers/
+   players); the builder generates a schedule and reconciles it to those
+   standings.
+
+Either way: run the pipeline, commit the generated JSON in
+`public/data/seasons/`.
 
 ## Parked (v2, do not build now)
 
